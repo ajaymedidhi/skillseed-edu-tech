@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillSeed – Planting Skills. Growing Futures.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    nav {
+      background: linear-gradient(90deg, #2e7d32 60%, #43a047 100%);
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+      transition: background 0.3s;
+    }
+    nav .logo {
+      color: #fff;
+      font-weight: 700;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.3s;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      transition: max-height 0.4s;
+    }
+    nav ul li {
+      position: relative;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.08rem;
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: background 0.2s, color 0.2s;
+      display: block;
+    }
+    nav ul li a:hover, nav ul li a:focus {
+      background: #ffd700;
+      color: #2e7d32;
+      outline: none;
+    }
+    /* Hamburger menu styles */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      margin-left: 16px;
+    }
+    .nav-toggle span {
+      height: 4px;
+      width: 100%;
+      background: #fff;
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: 0.4s;
+      display: block;
+    }
+    @media (max-width: 900px) {
+      nav ul {
+        gap: 16px;
+      }
+      nav .logo {
+        font-size: 1.3rem;
+      }
+    }
+    @media (max-width: 700px) {
+      nav {
+        flex-direction: row;
+        padding: 10px 12px;
+      }
+      .nav-toggle {
+        display: flex;
+      }
+      nav ul {
+        position: absolute;
+        top: 60px;
+        right: 10px;
+        background: #2e7d32;
+        flex-direction: column;
+        width: 180px;
+        max-height: 0;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(46,125,50,0.12);
+        border-radius: 12px;
+        transition: max-height 0.4s;
+      }
+      nav ul.open {
+        max-height: 400px;
+        padding: 12px 0;
+      }
+      nav ul li {
+        margin-bottom: 0;
+      }
+      nav ul li a {
+        padding: 12px 20px;
+        font-size: 1rem;
+      }
+    }
+    .courses-animations {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 32px;
+      margin-top: 36px;
+      flex-wrap: wrap;
+      animation: fadeInUp 1.2s;
+    } 
+    .img-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+    margin-bottom: 0; 
+    margin-left: 95px;
+    width: 30%;
+    }
+    .animated-img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 16px rgba(46,125,50,0.12));
+      animation: floatY 2.5s ease-in-out infinite alternate;
+      background: transparent;
+    }
+    .animated-img:nth-child(2) { animation-delay: 0.3s; }
+    .animated-img:nth-child(3) { animation-delay: 0.6s; }
+    .animated-img:nth-child(4) { animation-delay: 0.9s; }
+
+    @keyframes floatY {
+      from { transform: translateY(0); }
+      to { transform: translateY(-18px) scale(1.07); }
+    }
+    @media (max-width: 700px) {
+      .courses-animations {
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .animated-img {
+        width: 60px;
+        height: 60px;
+      }
+    }
+    header {
+      background: linear-gradient(135deg, #2e7d32, #66bb6a);
+      color: white;
+      text-align: center;
+      padding: 100px 20px 80px;
+      animation: fadeInDown 1s ease-in-out;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    header::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background: url('https://www.transparenttextures.com/patterns/diagonal-noise.png');
+      opacity: 0.1;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      animation: bounceIn 1.5s ease;
+      max-width: 800px;
+    }
+    header p {
+      font-size: 1.2rem;
+      margin-top: 15px;
+      animation: fadeInUp 1.5s ease;
+      max-width: 700px;
+    }
+    header .subtext {
+      font-size: 1rem;
+      margin-top: 8px;
+      animation: fadeInUp 1.5s ease;
+      max-width: 700px;
+      font-weight: 400;
+    }
+    .cta {
+      display: inline-block;
+      background-color: #ffd700;
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 25px;
+      text-decoration: none;
+      margin-top: 25px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      animation: fadeInUp 2s ease;
+    }
+    .cta:hover {
+      background-color: #fbc02d;
+      transform: scale(1.05);
+    }
+    section {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #2e7d32;
+      margin-bottom: 16px;
+      animation: fadeInLeft 1s ease;
+    }
+    .courses {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+    .card {
+      background-color: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      transition: transform 0.4s, box-shadow 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -75%;
+      width: 50%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      transform: skewX(-25deg);
+      transition: left 0.5s ease;
+    }
+    .card:hover::before {
+      left: 125%;
+    }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+    }
+    .card h3 {
+      color: #388e3c;
+      margin-bottom: 10px;
+    }
+    footer {
+      text-align: center;
+      background-color: #e0e0e0;
+      padding: 20px;
+      font-size: 0.9rem;
+    }
+    ul li {
+      margin-bottom: 10px;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { opacity: 1; transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .mentor-section {
+      background-color: #fff;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-top: 40px;
+      animation: fadeInUp 1s ease;
+    }
+    .mentor-section p {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+    }
+    .mentor-section .cta {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+   <nav>
+    <div class="logo">SkillSeed <span aria-label="seed" role="img">🌱</span></div>
+    <div class="nav-toggle" id="navToggle" aria-label="Toggle navigation" tabindex="0">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <ul id="navMenu">
+      <li><a href="#courses">Courses</a></li>
+      <li><a href="#why">Why Us</a></li>
+      <li><a href="#partners">Partners</a></li>
+      <li><a href="#mentor">Mentor</a></li>
+      <li><a href="mailto:hello@skillseed.in">Contact</a></li>
+    </ul>
+  </nav>
+  <script>
+    // Responsive navbar toggle
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.getElementById('navMenu');
+    navToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+    });
+    navToggle.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        navMenu.classList.toggle('open');
+      }
+    });
+    // Optional: Close menu when clicking a link (on mobile)
+    navMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth < 700) navMenu.classList.remove('open');
+      });
+    });
+  </script>
+
+  <header>
+    <h1>SkillSeed – Where Future-Ready Kids Begin</h1>
+    <p>Planting Skills. Growing Futures.</p>
+    <p class="subtext">Empowering students in Classes 7 to 10 with real-world skills, life lessons, and career clarity</p>
+    <a href="mailto:hello@skillseed.in" class="cta">Partner with Us</a>
+    </header>
+  <section id="why">
+    <h2>🌍 Why SkillSeed?</h2>
+    <p>Millions of students in India pass through school without clarity on careers, soft skills, or real-world readiness. We fill that gap with structured, inspiring, and activity-based programs aligned with NEP 2020.</p>
+  </section>
+
+  <section id="courses">
+    <div class="courses">
+  <div class="card">
+    <h3>Career Awareness</h3>
+    <p>Discover a wide range of career paths through real-life stories, roadmaps, and mentor talks.</p>
+    <img class="img-center" src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Career Awareness" class="animated-img" />
+  </div>
+  <div class="card">
+    <h3>Life Skills & Decision Making</h3>
+    <p>Boost emotional intelligence, resilience, and practical thinking for everyday life.</p>
+    <img class="img-center" src="https://cdn-icons-png.flaticon.com/512/2721/2721296.png" alt="Life Skills" class="animated-img" />
+  </div>
+  <div class="card">
+    <h3>Communication Skills</h3>
+    <p>From speaking confidently to presenting ideas — learn to express yourself clearly and effectively.</p>
+    <img class="img-center" src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Communication Skills" class="animated-img" />
+  </div>
+  <div class="card">
+    <h3>AI & Coding Basics (Coming Soon)</h3>
+    <p>Introduction to future tech — build fun, hands-on projects in AI, block coding, and more.</p>
+    <img class="img-center" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="AI & Coding" class="animated-img" />
+  </div>
+</div>
+    </div>
+  </section>
+  <section id="mentor" class="mentor-section">
+    <h2>🌟 Join as a Mentor</h2>
+    <p>Are you passionate about guiding young minds? Join SkillSeed as a mentor and make a real impact by sharing your career journey, teaching life skills, or simply being a role model to students across India.</p>
+    <a href="mailto:hello@skillseed.in?subject=Mentor Application" class="cta">Become a Mentor</a>
+  </section>
+  <section id="partners">
+    <h2>🤝 Work With Us</h2>
+    <ul>
+      <li><strong>Schools:</strong> Use SkillSeed as a co-curricular growth program.</li>
+      <li><strong>CSR Teams:</strong> Sponsor real educational transformation in underserved communities.</li>
+      <li><strong>Volunteers:</strong> Join our mission and mentor young minds.</li>
+    </ul>
+    <p>📩 Contact: <strong>hello@skillseed.in</strong></p>
+  </section>
+
+  <footer>
+    © 2025 SkillSeed | A BrightAhead Initiative
+  </footer>
+</body>
+</html>
