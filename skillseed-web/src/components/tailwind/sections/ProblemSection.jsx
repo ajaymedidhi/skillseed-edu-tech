@@ -39,18 +39,18 @@ const ProblemSection = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    className="mt-20 relative max-w-2xl mx-auto"
+                    className="mt-16 md:mt-20 relative max-w-3xl mx-auto w-full px-4 md:px-0"
                 >
-                    <div className="aspect-[16/9] md:aspect-[21/9] rounded-2xl bg-white/5 border border-white/10 p-12 flex items-center justify-center relative overflow-hidden group backdrop-blur">
+                    <div className="min-h-[350px] md:min-h-0 md:aspect-[21/9] rounded-2xl bg-white/5 border border-white/10 p-8 md:p-12 flex items-center justify-center relative overflow-hidden group backdrop-blur">
                         {/* Decorative elements */}
                         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-50"></div>
                         
-                        <div className="relative z-10 text-center space-y-6">
-                            <div className="w-20 h-20 mx-auto rounded-3xl bg-void border border-white/10 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                                <span className="text-4xl animate-bounce">🤔</span>
+                        <div className="relative z-10 text-center space-y-4 md:space-y-6 max-w-lg">
+                            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-2xl md:rounded-3xl bg-void border border-white/10 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                                <span className="text-3xl md:text-4xl animate-bounce">🤔</span>
                             </div>
-                            <h3 className="text-2xl font-bold font-display text-white">Feeling Lost?</h3>
-                            <p className="text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">Most students spend 15 years in education before discovering what they truly love. We change that.</p>
+                            <h3 className="text-xl md:text-2xl font-bold font-display text-white">Feeling Lost?</h3>
+                            <p className="text-slate-400 text-sm md:text-base leading-relaxed">Most students spend 15 years in education before discovering what they truly love. We change that.</p>
                             <button className="text-primary font-bold text-sm underline underline-offset-8 decoration-primary/30 hover:decoration-primary transition-all">See the Solution &rarr;</button>
                         </div>
                     </div>
