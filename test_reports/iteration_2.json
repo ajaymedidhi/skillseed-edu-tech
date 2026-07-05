@@ -1,0 +1,37 @@
+{
+  "summary": "SkillSeed iteration 2 (TTS bug fix + /api/nova/daily + Home redesign + logo). Backend: 17/17 pytest pass — health, profile (auto-create + patch), careers (list/filter/detail), skills, missions (list + idempotent complete), discover (questions + Claude analyze), Nova chat (multi-turn Claude Sonnet 4.5), Nova TTS (base64 valid + MP3 header ID3/FFxx sync), STT 422 validation, and NEW /api/nova/daily (shape validation for greeting/thought/spark/suggested_prompt/vibe non-empty; vibe in {curious,playful,focused,cozy,adventurous}; mission/career/skill ids null or in allowed sets; cache verified: force=true then force=false returns identical brief). Frontend (Expo web preview at https://skillseed-mobile.preview.emergentagent.com, viewport 390x844): Home renders home-screen, home-nova-card, home-brief-greeting ('Good morning, Riya ☀️'), home-reply-chip, home-nova-voice-btn, home-spark-card, home-today-mission, home-growth-strip; reply-chip navigates to /nova?prefill=... and user message renders. Explore: explore-screen, explore-spark-hero, chips (all/traditional/modern/ai/creative), 15 career-card-*. Grow: grow-screen, grow-nova-note, plant SVG, grow-suggested-* (1), mission-card-* (7 remaining after 1 promoted to suggested). Logo verified: /app/frontend/assets/images/logo.png = 371426 bytes, referenced in app.json for icon, android.adaptiveIcon.foregroundImage, and expo-splash-screen.image. TTS BUG FIX CONFIRMED: useNovaVoice.ts contains no FileSystem.EncodingType references, uses useAudioPlayer(null) + player.replace() imperative API + expo-file-system v19 File/Directory API; zero 'Cannot read properties of undefined (reading Base64)' console errors, zero 'speak failed'/'player.play failed' errors, zero red-screen/uncaught exceptions across all screens. Only residual noise = harmless RN Web deprecation warnings (shadow*, pointerEvents) already noted in iteration_1.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "global", "issues": ["RN Web deprecation warnings persist: shadow* style props (migrate to boxShadow), props.pointerEvents (migrate to style.pointerEvents). Cosmetic, non-blocking."]}
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_skillseed_api.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/skillseed_results.xml"
+  ],
+  "action_items": [
+    "(Optional cosmetic) Replace shadow* style props with boxShadow and props.pointerEvents with style.pointerEvents to silence RN Web deprecation warnings.",
+    "(Optional) Add testID='nova-message-<n>' on chat bubbles for stronger automation of Nova reply arrival — right now we can only assert the 'THINKING…' state clears."
+  ],
+  "critical_code_review_comments": [
+    "useNovaVoice.ts correctly uses single persistent useAudioPlayer(null) + player.replace(source) + 150ms setTimeout before play — matches expo-audio recommended imperative pattern.",
+    "Web path uses `data:audio/mpeg;base64,...` URI (browser-safe, avoids File API which isn't available in web).",
+    "Native path uses new expo-file-system v19 API: `new Directory(Paths.cache, 'nova')` + `dir.create({intermediates:true})` + `new File(dir, 'tts_<ts>.mp3')` + `file.write(b64, {encoding:'base64'})`. No deprecated FileSystem.EncodingType references remain.",
+    "server.py /api/nova/daily correctly caches by (device_id, date) in db.daily_briefs with upsert; force=true bypasses cache. Fallback brief if LLM JSON parse fails is sensible.",
+    "server.py still under 700 lines; all Mongo reads use `{'_id': 0}` projection consistently."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_skillseed_api.py (added TestNovaDaily class + test_tts_mp3_header_valid)"
+  ],
+  "success_rate": { "backend": "100% (17/17)", "frontend": "100% (all requested testIDs present, TTS bug fix verified, zero JS errors)" },
+  "seed_data_creation": "No persistent seed data. Test devices auto-created via GET /api/profile with TEST_<uuid> device_ids; daily briefs cached under those device_ids in db.daily_briefs.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "iteration 2 fully green. TTS fix verified via absence of console errors + code inspection. New /api/nova/daily endpoint verified for shape, allowed enums, and cache behavior. Home/Explore/Grow all render with expected testIDs. Note that on the web preview, TTS AUDIO cannot actually be heard (headless, no speaker) — verification is limited to (a) backend returns valid MP3 base64, (b) frontend code path executes without throwing, and (c) player.replace()/play() is called. Real device audio playback must be validated on Expo Go or a dev build by the user. New testIDs available: home-brief-greeting, home-nova-card, home-reply-chip, home-spark-card, home-growth-strip, home-pick-career-<id>, home-pick-skill-<id>, home-start-discover, home-view-profile, explore-spark-hero, explore-chip-<cat>, grow-nova-note, grow-suggested-<missionId>.",
+  "rca_of_issue": "Original bug: 'Nova not speaking, just chatbot replies'. Root cause was in useNovaVoice.ts: (1) code used deprecated FileSystem.EncodingType.Base64 (removed in expo-file-system v19) throwing 'Cannot read properties of undefined (reading Base64)' before audio could load, (2) reactive useAudioPlayer(sourceObj) pattern was unreliable across web/native for source swaps. Fix applied by main agent: (a) migrated to expo-file-system v19 File/Directory imperative API with {encoding:'base64'} string option, (b) switched to single persistent useAudioPlayer(null) + player.replace(source) + player.play() with 150ms warm-up delay, (c) web platform uses data:audio/mpeg;base64 URI (no File API needed). Verified: no console errors on Nova modal open, no 'speak failed' logs, TTS backend returns valid MP3 (ID3 or 0xFFxx sync header). Actual audible playback must be verified on-device."
+}

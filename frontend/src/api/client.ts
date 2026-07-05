@@ -51,6 +51,17 @@ export type NovaCard =
 
 export type NovaReply = { reply: string; cards: NovaCard[]; session_id: string };
 
+export type NovaDailyBrief = {
+  greeting: string;
+  thought: string;
+  spark: string;
+  suggested_prompt: string;
+  mission_id: string | null;
+  career_id: string | null;
+  skill_id: string | null;
+  vibe: 'curious' | 'playful' | 'focused' | 'cozy' | 'adventurous';
+};
+
 export type GrowthProfileResult = {
   headline: string;
   learning_style: string;
@@ -71,6 +82,8 @@ export const api = {
 
   novaChat: (payload: { device_id: string; session_id?: string; message: string }) =>
     request<NovaReply>(`/nova/chat`, { method: 'POST', body: JSON.stringify(payload) }),
+  novaDaily: (device_id: string, force = false) =>
+    request<NovaDailyBrief>(`/nova/daily`, { method: 'POST', body: JSON.stringify({ device_id, force }) }),
   novaTTS: (payload: { text: string; voice?: string; speed?: number }) =>
     request<{ audio_base64: string; mime: string }>(`/nova/tts`, {
       method: 'POST', body: JSON.stringify(payload),

@@ -292,6 +292,99 @@ async def nova_history(device_id: str, session_id: Optional[str] = None):
     return {"messages": docs}
 
 
+class DailyIn(BaseModel):
+    device_id: str
+    force: bool = False
+
+
+@api.post("/nova/daily")
+async def nova_daily(payload: DailyIn):
+    """Proactive Nova briefing for today — personalized, cached per day per device.
+
+    Returns:
+      {
+        greeting: str,             # 1-line warm hello, references student
+        thought: str,              # 2-3 sentence "Nova is thinking about you" note
+        spark: str,                # a provocative curiosity question
+        suggested_prompt: str,     # a chip the student can tap to talk to Nova
+        mission_id: str | null,    # today's suggested mission id
+        career_id: str | null,     # a career worth exploring today
+        skill_id: str | null,      # a future-skill to nudge
+        vibe: str                  # one of: curious, playful, focused, cozy, adventurous
+      }
+    """
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(500, "EMERGENT_LLM_KEY not configured")
+    profile = await _get_or_create_profile(payload.device_id)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    if not payload.force:
+        cached = await db.daily_briefs.find_one(
+            {"device_id": payload.device_id, "date": today}, {"_id": 0},
+        )
+        if cached:
+            return cached.get("brief", {})
+
+    name = profile.get("name") or "friend"
+    interests = ", ".join(profile.get("interests", [])) or "still discovering"
+    strengths = ", ".join(profile.get("strengths", [])) or "still discovering"
+    style = profile.get("learning_style") or "curious"
+    done = profile.get("completed_missions", [])
+    streak = profile.get("streak", 0)
+
+    system = f"""You are Nova, the growth companion of {name}, a student.
+It is a new day. You've been thinking about them. Write a WARM, HUMAN, PROACTIVE daily briefing.
+Their profile: interests={interests}; strengths={strengths}; style={style}; streak={streak} days; missions_done={len(done)}.
+Never sound corporate. Never say 'as your AI'. Talk like a curious elder sibling with a beautiful mind.
+
+Return ONLY minified JSON matching this schema — no markdown, no code fences, no extra prose:
+{{
+  "greeting": "<one warm short line, may address by name>",
+  "thought": "<2-3 sentence proactive note — something you've been thinking about them, or a small observation>",
+  "spark": "<a single provocative curiosity question, 8-16 words>",
+  "suggested_prompt": "<one very short chip text (max 5 words) they can tap to reply to you>",
+  "mission_id": "<one of: m_dream_app, m_ai_image, m_interview_grand, m_explain_ai, m_solve_problem, m_60s_video, m_save_50, m_teach_friend or null>",
+  "career_id": "<one of: engineer, doctor, lawyer, teacher, creator, founder, designer, freelancer, ai_engineer, prompt_engineer, ai_researcher, musician, writer, game_designer, filmmaker or null>",
+  "skill_id": "<one of: ai_literacy, financial_literacy, communication, coding, creativity or null>",
+  "vibe": "<one of: curious, playful, focused, cozy, adventurous>"
+}}
+Pick mission/career/skill that align with their interests. Do NOT repeat something already in missions_done.
+Be specific. Be surprising. Be kind."""
+
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"daily-{payload.device_id}-{today}",
+        system_message=system,
+    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+
+    try:
+        raw = await chat.send_message(UserMessage(text=f"Today's date is {today}. Give me my briefing for {name}."))
+    except Exception as e:
+        logger.exception("Daily briefing failed")
+        raise HTTPException(502, f"Daily briefing failed: {e}")
+
+    parsed = _extract_json(raw) or {}
+    if not parsed.get("greeting"):
+        parsed = {
+            "greeting": f"Hey {name}.",
+            "thought": "I was thinking about you this morning. Ready to plant something new today?",
+            "spark": "What is one small thing you're curious about right now?",
+            "suggested_prompt": "Tell me more",
+            "mission_id": None,
+            "career_id": None,
+            "skill_id": None,
+            "vibe": "curious",
+        }
+
+    # persist
+    await db.daily_briefs.update_one(
+        {"device_id": payload.device_id, "date": today},
+        {"$set": {"brief": parsed, "updated_at": _now_iso()}},
+        upsert=True,
+    )
+    return parsed
+
+
 @api.post("/nova/stt")
 async def nova_stt(file: UploadFile = File(...), language: Optional[str] = Form(None)):
     if not EMERGENT_LLM_KEY:

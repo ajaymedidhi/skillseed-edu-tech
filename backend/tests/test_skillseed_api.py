@@ -197,3 +197,71 @@ class TestNova:
         r = api_client.post(f"{base_url}/api/nova/stt", timeout=15,
                             headers={"Content-Type": "application/json"})
         assert r.status_code in (400, 422), f"got {r.status_code} {r.text}"
+
+    def test_tts_mp3_header_valid(self, api_client, base_url):
+        # Verify the base64 decodes into bytes with an MP3 header (ID3 or 0xFFFB sync)
+        r = api_client.post(f"{base_url}/api/nova/tts",
+                            json={"text": "Hello there Nova", "voice": "nova"}, timeout=60)
+        assert r.status_code == 200, r.text
+        b64 = r.json()["audio_base64"]
+        raw = base64.b64decode(b64)
+        assert len(raw) > 500
+        head3 = raw[:3]
+        # MP3 either starts with 'ID3' tag or with an MPEG sync frame (0xFF 0xFB/0xF3/0xF2)
+        assert head3 == b"ID3" or (raw[0] == 0xFF and (raw[1] & 0xE0) == 0xE0), (
+            f"bad mp3 header: {raw[:8]!r}"
+        )
+
+
+# ------------- Nova Daily -------------
+class TestNovaDaily:
+    ALLOWED_VIBES = {"curious", "playful", "focused", "cozy", "adventurous"}
+    ALLOWED_MISSIONS = {
+        "m_dream_app", "m_ai_image", "m_interview_grand", "m_explain_ai",
+        "m_solve_problem", "m_60s_video", "m_save_50", "m_teach_friend",
+    }
+    ALLOWED_CAREERS = {
+        "engineer", "doctor", "lawyer", "teacher", "creator", "founder", "designer",
+        "freelancer", "ai_engineer", "prompt_engineer", "ai_researcher", "musician",
+        "writer", "game_designer", "filmmaker",
+    }
+    ALLOWED_SKILLS = {"ai_literacy", "financial_literacy", "communication", "coding", "creativity"}
+
+    def test_daily_force_returns_valid_shape(self, api_client, base_url):
+        did = f"TEST_{uuid.uuid4().hex[:12]}"
+        # Seed profile w/ interests so the brief is personalized
+        api_client.get(f"{base_url}/api/profile", params={"device_id": did}, timeout=15)
+        api_client.patch(f"{base_url}/api/profile",
+                         json={"device_id": did, "name": "Riya",
+                               "interests": ["AI", "music"], "strengths": ["creativity"]},
+                         timeout=15)
+        r = api_client.post(f"{base_url}/api/nova/daily",
+                            json={"device_id": did, "force": True}, timeout=90)
+        assert r.status_code == 200, r.text
+        b = r.json()
+        for k in ["greeting", "thought", "spark", "suggested_prompt",
+                  "mission_id", "career_id", "skill_id", "vibe"]:
+            assert k in b, f"missing key {k}"
+        for k in ["greeting", "thought", "spark", "suggested_prompt", "vibe"]:
+            assert isinstance(b[k], str) and len(b[k].strip()) > 0, f"empty {k}"
+        assert b["vibe"] in self.ALLOWED_VIBES, f"bad vibe {b['vibe']}"
+        if b["mission_id"] is not None:
+            assert b["mission_id"] in self.ALLOWED_MISSIONS
+        if b["career_id"] is not None:
+            assert b["career_id"] in self.ALLOWED_CAREERS
+        if b["skill_id"] is not None:
+            assert b["skill_id"] in self.ALLOWED_SKILLS
+
+    def test_daily_caches_same_day(self, api_client, base_url):
+        did = f"TEST_{uuid.uuid4().hex[:12]}"
+        api_client.get(f"{base_url}/api/profile", params={"device_id": did}, timeout=15)
+        r1 = api_client.post(f"{base_url}/api/nova/daily",
+                             json={"device_id": did, "force": True}, timeout=90)
+        assert r1.status_code == 200
+        # tiny gap
+        time.sleep(0.5)
+        # No force -> should hit cache and return same content
+        r2 = api_client.post(f"{base_url}/api/nova/daily",
+                             json={"device_id": did, "force": False}, timeout=30)
+        assert r2.status_code == 200
+        assert r1.json() == r2.json(), "cached daily brief should match first response"

@@ -1,7 +1,8 @@
 // Voice interaction hook: record via expo-audio, transcribe via backend, and play back TTS.
 // Handles microphone permission with a graceful fallback + retry.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import {
   AudioModule,
   RecordingPresets,
@@ -23,9 +24,9 @@ export function useNovaVoice() {
   const [ttsLoading, setTtsLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
 
-  // Persistent audio player used for TTS playback
-  const [playerUri, setPlayerUri] = useState<string | null>(null);
-  const player = useAudioPlayer(playerUri ? { uri: playerUri } : null);
+  // Single persistent audio player. We swap the source imperatively via player.replace().
+  const player = useAudioPlayer(null);
+  const speakingRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -44,10 +45,14 @@ export function useNovaVoice() {
     })();
   }, []);
 
+  // Listen for playback completion
   useEffect(() => {
     if (!player) return;
     const sub = player.addListener?.('playbackStatusUpdate', (s: any) => {
-      if (s?.didJustFinish) setSpeaking(false);
+      if (s?.didJustFinish) {
+        speakingRef.current = false;
+        setSpeaking(false);
+      }
     });
     return () => sub?.remove?.();
   }, [player]);
@@ -106,33 +111,46 @@ export function useNovaVoice() {
   }, [recorder, recorderState.isRecording]);
 
   const speak = useCallback(async (text: string) => {
-    if (!text?.trim()) return;
+    if (!text?.trim() || !player) return;
     setTtsLoading(true);
     try {
+      // Stop any in-flight playback first
+      try { player.pause(); } catch {}
+
       const { audio_base64 } = await api.novaTTS({ text, voice: 'nova' });
-      // Write base64 to a temp file so expo-audio can play it via file URI (native).
-      // On web, fall back to a data URI since File API isn't available.
-      let uri: string;
-      try {
+
+      // Native: write to cache file and use its file URI.
+      // Web: use a data URI (File API isn't available in browsers).
+      let source: { uri: string };
+      if (Platform.OS === 'web') {
+        source = { uri: `data:audio/mpeg;base64,${audio_base64}` };
+      } else {
         const dir = new Directory(Paths.cache, 'nova');
         if (!dir.exists) dir.create({ intermediates: true });
         const file = new File(dir, `tts_${Date.now()}.mp3`);
         file.write(audio_base64, { encoding: 'base64' });
-        uri = file.uri;
-      } catch {
-        uri = `data:audio/mpeg;base64,${audio_base64}`;
+        source = { uri: file.uri };
       }
-      setPlayerUri(uri);
+
+      // Imperatively swap the source and play. Do NOT rely on the hook's source prop
+      // to reactively reload — that is unreliable across platforms.
+      player.replace(source);
+      speakingRef.current = true;
       setSpeaking(true);
-      // Give the player a tick to load the new source, then play
+      // give the native side a beat to load the new source, then play
       setTimeout(() => {
         try {
-          player?.seekTo?.(0);
-          player?.play?.();
-        } catch {}
-      }, 80);
+          player.seekTo?.(0);
+          player.play();
+        } catch (e) {
+          console.warn('player.play failed', e);
+          speakingRef.current = false;
+          setSpeaking(false);
+        }
+      }, 150);
     } catch (e) {
       console.warn('speak failed', e);
+      speakingRef.current = false;
       setSpeaking(false);
     } finally {
       setTtsLoading(false);
@@ -140,7 +158,8 @@ export function useNovaVoice() {
   }, [player]);
 
   const stopSpeaking = useCallback(() => {
-    try { player?.pause?.(); } catch {}
+    try { player?.pause(); } catch {}
+    speakingRef.current = false;
     setSpeaking(false);
   }, [player]);
 
