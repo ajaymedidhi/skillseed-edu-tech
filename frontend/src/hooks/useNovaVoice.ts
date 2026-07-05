@@ -1,4 +1,4 @@
-// Voice interaction hook: record via expo-audio, transcribe via backend, and play back TTS.
+// Voice interaction hook: record via expo-audio, transcribe via backend, play back TTS.
 // Handles microphone permission with a graceful fallback + retry.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +16,12 @@ import { api } from '@/src/api/client';
 
 export type MicPermission = 'granted' | 'denied' | 'undetermined';
 
+// A tiny 0.05s silent MP3 keeps the native player initialized cleanly
+// without spamming errors when we haven't loaded a real source yet.
+const SILENT_MP3_URI =
+  'data:audio/mpeg;base64,SUQzAwAAAAAAJlRTU0UAAAAJAAABTGF2ZjU4LjEyLjEwMAAAA' +
+  'AAAAAAAAAAAAP/7kGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////';
+
 export function useNovaVoice() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
@@ -24,9 +30,10 @@ export function useNovaVoice() {
   const [ttsLoading, setTtsLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
 
-  // Single persistent audio player. We swap the source imperatively via player.replace().
-  const player = useAudioPlayer(null);
-  const speakingRef = useRef(false);
+  // Persistent player, initialized with a harmless silent source.
+  // We swap the real source imperatively via player.replace().
+  const player = useAudioPlayer({ uri: SILENT_MP3_URI });
+  const pendingPlayRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -45,12 +52,22 @@ export function useNovaVoice() {
     })();
   }, []);
 
-  // Listen for playback completion
+  // Playback status listener: play as soon as the new source finishes loading,
+  // and update `speaking` when playback finishes.
   useEffect(() => {
     if (!player) return;
     const sub = player.addListener?.('playbackStatusUpdate', (s: any) => {
+      if (pendingPlayRef.current && s?.isLoaded && !s?.playing) {
+        pendingPlayRef.current = false;
+        try {
+          player.seekTo?.(0);
+          player.play?.();
+        } catch (e) {
+          console.warn('deferred play failed', e);
+          setSpeaking(false);
+        }
+      }
       if (s?.didJustFinish) {
-        speakingRef.current = false;
         setSpeaking(false);
       }
     });
@@ -115,12 +132,11 @@ export function useNovaVoice() {
     setTtsLoading(true);
     try {
       // Stop any in-flight playback first
-      try { player.pause(); } catch {}
+      try { player.pause?.(); } catch {}
 
       const { audio_base64 } = await api.novaTTS({ text, voice: 'nova' });
 
-      // Native: write to cache file and use its file URI.
-      // Web: use a data URI (File API isn't available in browsers).
+      // Build a playable source for the current platform.
       let source: { uri: string };
       if (Platform.OS === 'web') {
         source = { uri: `data:audio/mpeg;base64,${audio_base64}` };
@@ -132,25 +148,34 @@ export function useNovaVoice() {
         source = { uri: file.uri };
       }
 
-      // Imperatively swap the source and play. Do NOT rely on the hook's source prop
-      // to reactively reload — that is unreliable across platforms.
-      player.replace(source);
-      speakingRef.current = true;
+      // Imperatively swap the source. `play()` will be triggered inside the
+      // playbackStatusUpdate listener as soon as `isLoaded` becomes true —
+      // this avoids the "played before loaded" silence bug on native.
+      pendingPlayRef.current = true;
       setSpeaking(true);
-      // give the native side a beat to load the new source, then play
+      try {
+        player.replace(source);
+      } catch (e) {
+        console.warn('player.replace failed', e);
+        pendingPlayRef.current = false;
+        setSpeaking(false);
+      }
+
+      // Safety fallback: if the listener didn't fire within 800ms, try playing anyway.
       setTimeout(() => {
-        try {
-          player.seekTo?.(0);
-          player.play();
-        } catch (e) {
-          console.warn('player.play failed', e);
-          speakingRef.current = false;
-          setSpeaking(false);
+        if (pendingPlayRef.current) {
+          pendingPlayRef.current = false;
+          try {
+            player.seekTo?.(0);
+            player.play?.();
+          } catch (e) {
+            console.warn('fallback play failed', e);
+            setSpeaking(false);
+          }
         }
-      }, 150);
+      }, 800);
     } catch (e) {
       console.warn('speak failed', e);
-      speakingRef.current = false;
       setSpeaking(false);
     } finally {
       setTtsLoading(false);
@@ -158,8 +183,8 @@ export function useNovaVoice() {
   }, [player]);
 
   const stopSpeaking = useCallback(() => {
-    try { player?.pause(); } catch {}
-    speakingRef.current = false;
+    try { player?.pause?.(); } catch {}
+    pendingPlayRef.current = false;
     setSpeaking(false);
   }, [player]);
 

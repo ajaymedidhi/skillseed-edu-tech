@@ -30,6 +30,23 @@ export type Profile = {
   completed_missions: string[];
   onboarded: boolean;
   created_at: string;
+  trait_scores: Record<string, number>;
+  memory_notes: string[];
+  milestones: Milestone[];
+};
+
+export type Milestone = {
+  type: 'trait_milestone';
+  trait_id: string;
+  trait_name: string;
+  trait_emoji: string;
+  level: number;
+  achieved_at: string;
+  message: string;
+};
+
+export type Trait = {
+  id: string; name: string; emoji: string; color: string; description: string;
 };
 
 export type Career = {
@@ -42,6 +59,17 @@ export type Skill = { id: string; name: string; emoji: string; description: stri
 export type Mission = {
   id: string; title: string; emoji: string; difficulty: string;
   duration_min: number; growth_points: number; description: string; completed?: boolean;
+  trait_impacts?: Record<string, number>;
+  reflection_prompt?: string;
+};
+
+export type MissionCompletion = {
+  mission: Mission;
+  already_completed: boolean;
+  points_gained: number;
+  trait_deltas: Record<string, number>;
+  new_milestones: Milestone[];
+  profile: Profile;
 };
 
 export type NovaCard =
@@ -112,9 +140,15 @@ export const api = {
   getMission: (id: string, device_id: string) =>
     request<Mission>(`/missions/${id}?device_id=${encodeURIComponent(device_id)}`),
   completeMission: (id: string, device_id: string) =>
-    request<{ mission: Mission; already_completed: boolean; points_gained: number; profile: Profile }>(
+    request<MissionCompletion>(
       `/missions/${id}/complete`, { method: 'POST', body: JSON.stringify({ device_id }) },
     ),
+
+  listTraits: () => request<{ items: Trait[] }>(`/traits`),
+  novaMemory: (device_id: string) =>
+    request<{ notes: string[] }>(`/nova/memory`, {
+      method: 'POST', body: JSON.stringify({ device_id }),
+    }),
 
   discoverQuestions: () =>
     request<{ items: { id: string; prompt: string; options: string[] }[] }>(`/discover/questions`),

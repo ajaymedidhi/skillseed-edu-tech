@@ -39,9 +39,11 @@ export default function MissionDetail() {
         pathname: '/mission-complete',
         params: {
           missionId: mission.id,
-          points: String(r.points_gained),
           title: mission.title,
           emoji: mission.emoji,
+          traits: JSON.stringify(r.trait_deltas || {}),
+          milestones: JSON.stringify(r.new_milestones || []),
+          reflection: mission.reflection_prompt || '',
         },
       });
     } finally {

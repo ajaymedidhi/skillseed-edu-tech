@@ -112,7 +112,16 @@ export default function NovaScreen() {
           <Text style={[type.h3, { color: colors.textPrimary }]}>Nova</Text>
           <Pressable
             testID="nova-close-btn"
-            onPress={() => { voice.stopSpeaking(); voice.cancelRecording(); router.back(); }}
+            onPress={() => {
+              voice.stopSpeaking();
+              voice.cancelRecording();
+              // Fire-and-forget: ask backend to summarize this session into
+              // long-term memory notes so Nova references it next time.
+              if (deviceId && messages.length >= 2) {
+                api.novaMemory(deviceId).catch(() => {});
+              }
+              router.back();
+            }}
             hitSlop={12}
           >
             <X color={colors.textPrimary} size={24} strokeWidth={2.2} />
