@@ -589,7 +589,7 @@ async def complete_mission(mission_id: str, payload: MissionCompleteIn):
         traits_prev: Dict[str, int] = dict(profile.get("trait_scores", {}) or {})
         traits_next = dict(traits_prev)
         impacts = mission.get("trait_impacts", {}) or {}
-        THRESHOLDS = [25, 50, 75, 100]
+        THRESHOLDS = [20, 40, 60, 80, 100]
         trait_meta = {t["id"]: t for t in TRAITS}
         for trait_id, delta in impacts.items():
             before = int(traits_prev.get(trait_id, 0))
@@ -721,6 +721,13 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+
+@app.on_event("shutdown")
+async def _shutdown():
+    client.close()
+w_headers=["*"],
 )
 
 
