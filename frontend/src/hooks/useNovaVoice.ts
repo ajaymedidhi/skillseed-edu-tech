@@ -1,8 +1,7 @@
 // Voice interaction hook: record via expo-audio, transcribe via backend, and play back TTS.
 // Handles microphone permission with a graceful fallback + retry.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AudioModule,
   RecordingPresets,
@@ -11,7 +10,7 @@ import {
   useAudioRecorderState,
   setAudioModeAsync,
 } from 'expo-audio';
-import * as FileSystem from 'expo-file-system';
+import { File, Directory, Paths } from 'expo-file-system';
 import { api } from '@/src/api/client';
 
 export type MicPermission = 'granted' | 'denied' | 'undetermined';
@@ -87,7 +86,10 @@ export function useNovaVoice() {
       if (!uri) return null;
       setTranscribing(true);
       const { text } = await api.novaSTT(uri);
-      try { await FileSystem.deleteAsync(uri, { idempotent: true }); } catch {}
+      try {
+        const rec = new File(uri);
+        if (rec.exists) rec.delete();
+      } catch {}
       return text || null;
     } catch (e) {
       console.warn('stopAndTranscribe failed', e);
@@ -108,14 +110,18 @@ export function useNovaVoice() {
     setTtsLoading(true);
     try {
       const { audio_base64 } = await api.novaTTS({ text, voice: 'nova' });
-      // Write base64 to a temp file so expo-audio can play it via file URI
-      const dir = FileSystem.cacheDirectory + 'nova/';
-      try { await FileSystem.makeDirectoryAsync(dir, { intermediates: true }); } catch {}
-      const path = dir + `tts_${Date.now()}.mp3`;
-      await FileSystem.writeAsStringAsync(path, audio_base64, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      const uri = Platform.OS === 'android' && !path.startsWith('file://') ? 'file://' + path : path;
+      // Write base64 to a temp file so expo-audio can play it via file URI (native).
+      // On web, fall back to a data URI since File API isn't available.
+      let uri: string;
+      try {
+        const dir = new Directory(Paths.cache, 'nova');
+        if (!dir.exists) dir.create({ intermediates: true });
+        const file = new File(dir, `tts_${Date.now()}.mp3`);
+        file.write(audio_base64, { encoding: 'base64' });
+        uri = file.uri;
+      } catch {
+        uri = `data:audio/mpeg;base64,${audio_base64}`;
+      }
       setPlayerUri(uri);
       setSpeaking(true);
       // Give the player a tick to load the new source, then play
@@ -124,7 +130,7 @@ export function useNovaVoice() {
           player?.seekTo?.(0);
           player?.play?.();
         } catch {}
-      }, 60);
+      }, 80);
     } catch (e) {
       console.warn('speak failed', e);
       setSpeaking(false);
