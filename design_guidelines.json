@@ -1,0 +1,139 @@
+{
+  "project_name": "SkillSeed",
+  "domain": "AI-Powered Growth Companion for Students",
+  "theme_archetype": {
+    "primary": "Hybrid: Archetype 3 (Pastel & Soft) + Archetype 5 (Luxury)",
+    "rationale": "Blends the approachable, friendly, optimistic vibe needed for school students (Classes 6-10) with the cinematic, deep, premium feel of an AI-native consumer app. Avoids feeling like a standard LMS or enterprise tool.",
+    "supported_modes": ["light", "dark"]
+  },
+  "design_philosophy": {
+    "simplicity": "Apple-level simplicity, minimal cognitive load, progressive disclosure.",
+    "precision": "Linear-level precision, perfect alignment, high-quality typography.",
+    "delight": "Arc Browser-level delightful interactions, micro-animations everywhere.",
+    "friendliness": "Duolingo-level approachability, but mature enough for teens.",
+    "aesthetic": "Stripe-level premium gradients, 20-28px rounded corners, glassmorphism, soft layering."
+  },
+  "colors": {
+    "light": {
+      "primary": "#10B981",
+      "primary_soft": "#D1FAE5",
+      "secondary": "#6366F1",
+      "secondary_soft": "#E0E7FF",
+      "accent": "#38BDF8",
+      "achievement": "#FBBF24",
+      "background": "#F8FAFC",
+      "surface": "#FFFFFF",
+      "surface_glass": "rgba(255, 255, 255, 0.75)",
+      "text_primary": "#0F172A",
+      "text_secondary": "#64748B",
+      "border": "#E2E8F0",
+      "shadow": "rgba(15, 23, 42, 0.05)"
+    },
+    "dark": {
+      "primary": "#10B981",
+      "primary_soft": "#064E3B",
+      "secondary": "#6366F1",
+      "secondary_soft": "#312E81",
+      "accent": "#38BDF8",
+      "achievement": "#FBBF24",
+      "background": "#09090B",
+      "surface": "#18181B",
+      "surface_glass": "rgba(24, 24, 27, 0.65)",
+      "text_primary": "#FAFAFA",
+      "text_secondary": "#A1A1AA",
+      "border": "#27272A",
+      "shadow": "rgba(0, 0, 0, 0.3)"
+    }
+  },
+  "typography": {
+    "family": {
+      "headings": "Outfit, system-ui, sans-serif",
+      "body": "Manrope, system-ui, sans-serif"
+    },
+    "scale": {
+      "h1": { "size": "36px", "weight": "800", "tracking": "-1px", "lineHeight": "42px" },
+      "h2": { "size": "28px", "weight": "700", "tracking": "-0.5px", "lineHeight": "34px" },
+      "h3": { "size": "22px", "weight": "600", "tracking": "0px", "lineHeight": "28px" },
+      "body": { "size": "16px", "weight": "400", "tracking": "0.2px", "lineHeight": "24px" },
+      "caption": { "size": "13px", "weight": "500", "tracking": "0.5px", "lineHeight": "18px", "textTransform": "uppercase" }
+    }
+  },
+  "layout_and_spacing": {
+    "spacing_scale": [4, 8, 12, 16, 24, 32, 40, 48, 64],
+    "border_radius": {
+      "sm": "12px",
+      "md": "20px",
+      "lg": "28px",
+      "full": "9999px"
+    },
+    "container_padding": "24px"
+  },
+  "components": {
+    "nova_orb_states": {
+      "idle": "Soft breathing animation (scale 1 to 1.05), slow rotation, gentle gradient shift (Indigo to Sky Blue).",
+      "listening": "Dynamic voice wave outer rings responding to audio input, pulsing Emerald Green.",
+      "processing": "Rapid inner spinning animation, shrinking slightly, glowing deeply.",
+      "celebrating": "Burst of Warm Yellow and Emerald particles, scale pops to 1.2."
+    },
+    "cards": {
+      "base": "Surface background, lg border radius (28px), 1px subtle border, soft premium shadow.",
+      "glass": "Requires expo-blur BlurView. surface_glass tint, intense blur radius, used for floating UI elements over Nova."
+    },
+    "chips": {
+      "style": "Pill-shaped (radius full), semi-transparent background (primary_soft or secondary_soft), heavily legible text. Used for conversation starters."
+    },
+    "buttons": {
+      "primary": "Emerald Green background, bold white text, scale down slightly on press (React Native Reanimated withSpring).",
+      "voice_mic": "Large floating action button, heavily shadowed, always accessible at bottom center."
+    },
+    "mission_cards": {
+      "style": "Asymmetric bento layout. Features a 3D icon/illustration on one side, clean progress indicator (animated ring) on the other. Backgrounds subtly tinted with accent colors."
+    }
+  },
+  "animations": {
+    "engine": "React Native Reanimated & expo-blur for glass effects.",
+    "page_transitions": "Smooth fade and slide up, similar to iOS native modal presentations.",
+    "interactions": "All touchable elements must have a spring-based scale-down effect on pressIn.",
+    "celebration": "Use Lottie/Rive for confetti when daily missions are completed. Restrict to major milestones to maintain premium feel."
+  },
+  "icons_and_illustrations": {
+    "icon_library": "lucide-react-native (rounded, consistent 2px stroke, modern).",
+    "illustration_style": "High-quality 3D minimalist or modern flat, avoiding childish vectors. Incorporate abstract representations of growth (plants, seeds) and technology."
+  },
+  "media_urls": [
+    {
+      "category": "nova_hero_abstract",
+      "url": "https://images.unsplash.com/photo-1634634120836-2e9581aba554?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNDR8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGdsb3dpbmclMjBsaWdodCUyMG9yYnxlbnwwfHx8fDE3ODMyMzUzMDV8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract glowing light orb/bubbles. Use as the static fallback or background for the Nova AI mentor."
+    },
+    {
+      "category": "nova_processing_abstract",
+      "url": "https://images.unsplash.com/photo-1653549893012-b8b4fbe97630?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMHNjaWVuY2UlMjB0ZWNobm9sb2d5JTIwY29uY2VwdHxlbnwwfHx8fDE3ODMyMzUzMDV8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Computer generated circular technology object. Use during AI 'thinking' or 'processing' states."
+    },
+    {
+      "category": "growth_plant_metaphor",
+      "url": "https://images.unsplash.com/photo-1666549415033-b45039335fe4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwzfHxtaW5pbWFsaXN0JTIwM2QlMjBncm93aW5nJTIwcGxhbnQlMjBzcHJvdXR8ZW58MHx8fHwxNzgzMjM1MzA1fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Minimalist 3D growing plant sprout. Central visual for the Growth Dashboard and completed missions."
+    },
+    {
+      "category": "explore_category_tech",
+      "url": "https://images.unsplash.com/photo-1757466762489-52fea38071ad?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMHNjaWVuY2UlMjB0ZWNobm9sb2d5JTIwY29uY2VwdHxlbnwwfHx8fDE3ODMyMzUzMDV8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract blue waves of glowing particles. Use as background for the 'Career Explorer - AI/Tech' card."
+    },
+    {
+      "category": "student_learning",
+      "url": "https://images.unsplash.com/photo-1646756089735-487709743361?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHx0ZWVuYWdlJTIwc3R1ZGVudCUyMHVzaW5nJTIwdGVjaG5vbG9neSUyMG1vZGVybnxlbnwwfHx8fDE3ODMyMzUzMDV8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Young student working on modern tech. Use in the 'Day in the Life' career detail views."
+    }
+  ],
+  "instructions_to_main_agent": [
+    "TECH STACK RULE: Build using React Native (Expo). Do NOT use web-based Tailwind or Shadcn/ui. Use StyleSheet or NativeWind. Write all code in .js files, NOT .tsx.",
+    "VOICE FIRST: The Home screen should NOT feel like a traditional menu. The 'Nova' AI character takes up the top 60% of the screen. Navigation and chips should float over the bottom.",
+    "GLASSMORPHISM: Use expo-blur for floating conversational UI cards (like Siri or Arc Search) overlaid on top of the Nova character.",
+    "ANIMATIONS: Use React Native Reanimated. Every button press must have a subtle scale animation. Nova must have a continuous floating/breathing animation (translateY and scale).",
+    "TESTING: Apply testID attribute to all interactive elements instead of data-testid (since it is React Native). Use descriptive kebab-case names.",
+    "NO LOREUM IPSUM: Write real conversational copy for the AI. 'Hi, I'm Nova. Ready to grow your skills today?'",
+    "DARK MODE: Ensure dynamic color token usage so the app seamlessly switches between the light and dark palettes."
+  ]
+}
